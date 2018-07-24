@@ -14,10 +14,25 @@ class GameScene: SKScene {
     private var label : SKLabelNode?
     private var spinnyNode : SKShapeNode?
     
+    private let garbageImageNames = [
+        "diapers",
+        "straw"
+    ]
+    
+    override func sceneDidLoad() {
+        var i = 0
+        for garbageImageName in garbageImageNames {
+            let garbageNode = SKSpriteNode(imageNamed: garbageImageName)
+            garbageNode.position = CGPoint(x:75 * i, y: 10)
+            i += 1
+            addChild(garbageNode)
+        }
+    }
+    
     override func didMove(to view: SKView) {
         
         // Get label node from scene and store it for use later
-        self.label = self.childNode(withName: "//helloLabel") as? SKLabelNode
+        self.label = self.childNode(withName: "//titleLabel") as? SKLabelNode
         if let label = self.label {
             label.alpha = 0.0
             label.run(SKAction.fadeIn(withDuration: 2.0))
