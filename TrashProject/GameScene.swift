@@ -18,24 +18,27 @@ class GameScene: SKScene {
     private let trashImageNames = [
         "diapers",
         "straw"
+        
+        //add more types of trash, also add recycling and compost image names, corrosponds to assets/pics
     ]
     
-    override func sceneDidLoad() {
+    override func didMove(to view: SKView) {
+
         // Slow down gravity
         physicsWorld.gravity = CGVector(dx: 0, dy: -1.5)
+        
+        //Adds three buckets
         addBucket(bucketName: "trashBucket", startingPosition: CGPoint(x: -300, y: -600), size: CGPoint(x: 200, y: 300))
         addBucket(bucketName: "recyclingBucket", startingPosition: CGPoint(x: -100, y: -600), size: CGPoint(x: 200, y: 300))
         addBucket(bucketName: "compostBucket", startingPosition: CGPoint(x: 100, y: -600), size: CGPoint(x: 200, y: 300))
-
+        
+        //For testing purposes, add one of each kind of trash, later randomize it
         var i = 0
         for trashImageName in trashImageNames {
             addPiece(imageName:trashImageName, nodeName: "trash", startingPosition: CGPoint(x:75 * i, y: 600))
             i += 1
         }
-    }
     
-    override func didMove(to view: SKView) {
-        
         // Get label node from scene and store it for use later
         self.label = self.childNode(withName: "//titleLabel") as? SKLabelNode
         if let label = self.label {
@@ -43,7 +46,8 @@ class GameScene: SKScene {
             label.run(SKAction.fadeIn(withDuration: 2.0))
         }
    }
-    
+    //Adds a piece of trash/recycling/compost to scene. Image name is the Asset picture name.
+    // Node name should be "trash" or "recycling" or "compost"
     func addPiece(imageName: String, nodeName: String, startingPosition: CGPoint) {
         let node = SKSpriteNode(imageNamed: imageName)
         node.name = nodeName
@@ -53,6 +57,8 @@ class GameScene: SKScene {
         addChild(node)
     }
     
+    //Bucket name should be "recyclingBucket" "trashBucket" "compostBucket"
+    //Add bucket
     func addBucket(bucketName: String, startingPosition: CGPoint, size: CGPoint) {
         var splinePoints = [CGPoint(x: 0, y: size.y),
                             CGPoint(x: 0.20 * size.x, y: 0),
@@ -69,39 +75,44 @@ class GameScene: SKScene {
         addChild(bucket)
     }
     
+    // called when drag begins
     func touchBegin(atPoint pos : CGPoint) {
         caughtTrash = atPoint(pos)
     }
     
+    // called when finger moves during drag
     func touchMoved(toPoint pos : CGPoint) {
         if let haveCaughtTrash = caughtTrash {
             haveCaughtTrash.position = pos
         }
     }
     
+    // called when drag ends
     func touchEnd(atPoint pos : CGPoint) {
-        // TODO: Drop into recycle/trash/compost
         caughtTrash = nil
     }
-    
+    // called by system when drag begins
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         if let touch = touches.first {
             touchBegin(atPoint:touch.location(in: self))
         }
     }
     
+    // called by system when drag moves
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         if let touch = touches.first {
             touchMoved(toPoint:touch.location(in: self))
         }
     }
     
+    // called by system when drag ends
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         if let touch = touches.first {
             touchEnd(atPoint:touch.location(in: self))
         }
     }
     
+    // called by system when drag is cancelled like when a phone call is recived
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
         if let touch = touches.first {
             touchEnd(atPoint:touch.location(in: self))
