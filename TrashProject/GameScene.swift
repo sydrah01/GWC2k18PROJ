@@ -21,9 +21,15 @@ class GameScene: SKScene {
     ]
     
     override func sceneDidLoad() {
+        // Slow down gravity
+        physicsWorld.gravity = CGVector(dx: 0, dy: -1.5)
+        addBucket(bucketName: "trashBucket", startingPosition: CGPoint(x: -300, y: -600), size: CGPoint(x: 200, y: 300))
+        addBucket(bucketName: "recyclingBucket", startingPosition: CGPoint(x: -100, y: -600), size: CGPoint(x: 200, y: 300))
+        addBucket(bucketName: "compostBucket", startingPosition: CGPoint(x: 100, y: -600), size: CGPoint(x: 200, y: 300))
+
         var i = 0
         for trashImageName in trashImageNames {
-            addPiece(imageName:trashImageName, nodeName: "trash", startingPosition: CGPoint(x:75 * i, y: 10))
+            addPiece(imageName:trashImageName, nodeName: "trash", startingPosition: CGPoint(x:75 * i, y: 600))
             i += 1
         }
     }
@@ -42,7 +48,25 @@ class GameScene: SKScene {
         let node = SKSpriteNode(imageNamed: imageName)
         node.name = nodeName
         node.position = startingPosition
+        node.physicsBody = SKPhysicsBody(texture: node.texture!,
+                                         size: node.texture!.size())
         addChild(node)
+    }
+    
+    func addBucket(bucketName: String, startingPosition: CGPoint, size: CGPoint) {
+        var splinePoints = [CGPoint(x: 0, y: size.y),
+                            CGPoint(x: 0.20 * size.x, y: 0),
+                            CGPoint(x: 0.80 * size.x, y: 0),
+                            CGPoint(x: size.x, y: size.y)]
+        let bucket = SKShapeNode(splinePoints: &splinePoints,
+                                 count: splinePoints.count)
+        bucket.position = startingPosition
+        bucket.lineWidth = 5
+        bucket.strokeColor = .white
+        bucket.physicsBody = SKPhysicsBody(edgeChainFrom: bucket.path!)
+        bucket.physicsBody?.restitution = 0.25
+        bucket.physicsBody?.isDynamic = false
+        addChild(bucket)
     }
     
     func touchBegin(atPoint pos : CGPoint) {
