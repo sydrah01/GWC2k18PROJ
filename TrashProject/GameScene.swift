@@ -11,6 +11,10 @@ import GameplayKit
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
+    // Define collision cetegories
+    private let pieceCategory  : UInt32 = 0x1 << 0
+    private let bucketCategory : UInt32 = 0x1 << 1
+
     private var label : SKLabelNode?
     
     private var caughtTrash : SKNode?
@@ -51,12 +55,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     //Adds a piece of trash/recycling/compost to scene. Image name is the Asset picture name.
     // Node name should be "trash" or "recycling" or "compost"
     func addPiece(imageName: String, nodeName: String, startingPosition: CGPoint) {
-        let node = SKSpriteNode(imageNamed: imageName)
-        node.name = nodeName
-        node.position = startingPosition
-        node.physicsBody = SKPhysicsBody(texture: node.texture!,
-                                         size: node.texture!.size())
-        addChild(node)
+        let piece = SKSpriteNode(imageNamed: imageName)
+        piece.name = nodeName
+        piece.position = startingPosition
+        piece.physicsBody = SKPhysicsBody(texture: piece.texture!,
+                                         size: piece.texture!.size())
+        piece.physicsBody?.categoryBitMask = pieceCategory
+        piece.physicsBody?.contactTestBitMask = pieceCategory | bucketCategory
+        addChild(piece)
     }
     
     //Bucket name should be "recyclingBucket" "trashBucket" "compostBucket"
@@ -68,12 +74,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                             CGPoint(x: size.x, y: size.y)]
         let bucket = SKShapeNode(splinePoints: &splinePoints,
                                  count: splinePoints.count)
+        bucket.name = bucketName
         bucket.position = startingPosition
         bucket.lineWidth = 5
         bucket.strokeColor = .white
         bucket.physicsBody = SKPhysicsBody(edgeChainFrom: bucket.path!)
         bucket.physicsBody?.restitution = 0.25
         bucket.physicsBody?.isDynamic = false
+        bucket.physicsBody?.categoryBitMask = bucketCategory
         addChild(bucket)
     }
     
@@ -98,6 +106,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func touchEnd(atPoint pos : CGPoint) {
         caughtTrash = nil
     }
+    
     // called by system when drag begins
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         if let touch = touches.first {
@@ -125,10 +134,29 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             touchEnd(atPoint:touch.location(in: self))
         }
     }
+    
     // collision handeler
     func didBegin(_ contact: SKPhysicsContact) {
-        if contact.bodyA.node?.name == "trash" && contact.bodyB.node?.name == "trashBucket" {
-            contact.bodyA.node!.removeFromParent()
+        var firstBody: SKPhysicsBody
+        var secondBody: SKPhysicsBody
+
+        if contact.bodyA.categoryBitMask < contact.bodyB.categoryBitMask {
+            firstBody = contact.bodyA
+            secondBody = contact.bodyB
+        } else {
+            firstBody = contact.bodyB
+            secondBody = contact.bodyA
+        }
+        
+        //if a piece hits its corrosponding bucket, it will disapear.
+        if firstBody.categoryBitMask == pieceCategory &&
+            secondBody.categoryBitMask == bucketCategory {
+            let pieceName = firstBody.node!.name!
+            let bucketName = secondBody.node!.name!
+            let isCorrectBucket = pieceName + "Bucket" == bucketName
+            if isCorrectBucket {
+                firstBody.node!.removeFromParent()
+            }
         }
     }
     
