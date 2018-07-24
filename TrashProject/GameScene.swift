@@ -9,7 +9,7 @@
 import SpriteKit
 import GameplayKit
 
-class GameScene: SKScene {
+class GameScene: SKScene, SKPhysicsContactDelegate {
     
     private var label : SKLabelNode?
     
@@ -23,6 +23,8 @@ class GameScene: SKScene {
     ]
     
     override func didMove(to view: SKView) {
+        // Set self as the contact delegate. didBegin will be called when collisions occur.
+        physicsWorld.contactDelegate = self
 
         // Slow down gravity
         physicsWorld.gravity = CGVector(dx: 0, dy: -1.5)
@@ -77,7 +79,12 @@ class GameScene: SKScene {
     
     // called when drag begins
     func touchBegin(atPoint pos : CGPoint) {
-        caughtTrash = atPoint(pos)
+        let node = atPoint(pos)
+        let nodeName = node.name
+        //don't pick up buckets
+        if nodeName == "trash" || nodeName == "recycling" || nodeName == "compost" {
+                caughtTrash = node
+            }
     }
     
     // called when finger moves during drag
@@ -118,7 +125,12 @@ class GameScene: SKScene {
             touchEnd(atPoint:touch.location(in: self))
         }
     }
-    
+    // collision handeler
+    func didBegin(_ contact: SKPhysicsContact) {
+        if contact.bodyA.node?.name == "trash" && contact.bodyB.node?.name == "trashBucket" {
+            contact.bodyA.node!.removeFromParent()
+        }
+    }
     
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
